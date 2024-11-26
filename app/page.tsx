@@ -1,5 +1,4 @@
 import Image from "next/image";
-import CookieConsentComponent from "./CC-banner";
 
 export default function Home() {
   return (
@@ -96,7 +95,6 @@ export default function Home() {
           />
           Go to nextjs.org →
         </a>
-        <CookieConsentComponent />
       </footer>
     </div>
   );

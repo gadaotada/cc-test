@@ -1,41 +1,57 @@
 import type { CookieConsentConfig } from 'vanilla-cookieconsent';
 
-const getConfig = (param: undefined | ((scripts: string[]) => void) = undefined) => {
+const getConfig = (setNewSr: (newSr: string[]) => void) => {
   const config: CookieConsentConfig = {
-    root: 'footer',
-    autoShow: true,
+    // root: 'body',
+    // autoShow: true,
     // disablePageInteraction: true,
-    hideFromBots: true,
+    // hideFromBots: true,
     // mode: 'opt-in',
     // revision: 0,
 
     cookie: {
-        name: 'cc_cookie',
-        domain: location.hostname,
-        path: '/',
-        sameSite: "Lax",
-        expiresAfterDays: 365,
+      // name: 'cc_cookie',
+      // domain: location.hostname,
+      // path: '/',
+      // sameSite: "Lax",
+      // expiresAfterDays: 365,
     },
 
     /**
      * Callback functions
      */
     onFirstConsent: ({ cookie }) => {
-        if (param) {
-            const enabledServices = cookie.services.analytics;
-            param(enabledServices);
-        }
+      console.log('onFirstConsent fired', cookie);
     },
 
+    onConsent: ({ cookie }) => {
+      console.log('onConsent fired!', cookie);
+      const acceptedServices = cookie.services.analytics;
+      console.log(acceptedServices)
+      setNewSr(acceptedServices);
+    },
 
-    onChange: ({ cookie }) => {
-      if (param) {
-        const enabledServices = cookie.services.analytics;
-        //console.log('enabledServices:', changedServices);   
-        param(enabledServices);
+    onChange: ({ changedCategories, changedServices }) => {
+      console.log('onChange fired!', changedCategories, changedServices);
+      if (window) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
-
     },
+
+    onModalReady: ({ modalName }) => {
+      console.log('ready:', modalName);
+    },
+
+    onModalShow: ({ modalName }) => {
+      console.log('visible:', modalName);
+    },
+
+    onModalHide: ({ modalName }) => {
+      console.log('hidden:', modalName);
+    },
+
     // https://cookieconsent.orestbida.com/reference/configuration-reference.html#guioptions
     guiOptions: {
       consentModal: {
@@ -57,16 +73,6 @@ const getConfig = (param: undefined | ((scripts: string[]) => void) = undefined)
         readOnly: true, // this category cannot be disabled
       },
       analytics: {
-        autoClear: {
-          cookies: [
-            {
-              name: /^_ga/, // regex: match all cookies starting with '_ga'
-            },
-            {
-              name: '_gid', // string: exact cookie name
-            },
-          ],
-        },
 
         // https://cookieconsent.orestbida.com/reference/configuration-reference.html#category-services
         services: {
@@ -74,9 +80,17 @@ const getConfig = (param: undefined | ((scripts: string[]) => void) = undefined)
             label: 'Google Analytics',
             onAccept: () => {},
             onReject: () => {},
+            cookies: [
+              {name: "/.*_ga.*/"}
+            ],
           },
           youtube: {
             label: 'Youtube Embed',
+            onAccept: () => {},
+            onReject: () => {},
+          },
+          mvvCustomJsScript: {
+            label: 'mvvCustomJsScript',
             onAccept: () => {},
             onReject: () => {},
           },
@@ -86,7 +100,7 @@ const getConfig = (param: undefined | ((scripts: string[]) => void) = undefined)
     },
 
     language: {
-      default: 'bg',
+      default: 'en',
       translations: {
         en: {
           consentModal: {
@@ -98,7 +112,8 @@ const getConfig = (param: undefined | ((scripts: string[]) => void) = undefined)
             showPreferencesBtn: 'Manage Individual preferences',
             // closeIconLabel: 'Reject all and close modal',
             footer: `
-                        <a href="https://lacrema.bg/politika-poveritelnost/ target="_blank">Privacy Policy</a>
+                        <a href="#path-to-impressum.html" target="_blank">Impressum</a>
+                        <a href="#path-to-privacy-policy.html" target="_blank">Privacy Policy</a>
                     `,
           },
           preferencesModal: {
@@ -156,83 +171,11 @@ const getConfig = (param: undefined | ((scripts: string[]) => void) = undefined)
               {
                 title: 'More information',
                 description:
-                  'For any queries in relation to my policy on cookies and your choices, please <a href="https://lacrema.bg/kontakti/">contact us</a>',
+                  'For any queries in relation to my policy on cookies and your choices, please <a href="#contact-page">contact us</a>',
               },
             ],
           },
         },
-        bg: {
-            consentModal: {
-              title: 'И сайтът ни "сервира" бисквитки!',
-              description:
-                'Те са необходими за по-добрата интеракция с уебсайта. Можете да приемете/откажете цялата порция, или да подберете предпочитаните от менюто за контрол.',
-              acceptAllBtn: 'Приеми всички',
-              acceptNecessaryBtn: 'Откажи всички',
-              showPreferencesBtn: 'Управление на индивидуалните предпочитания',
-              // closeIconLabel: 'Reject all and close modal',
-              footer: `
-                          <a href="https://lacrema.bg/politika-poveritelnost/" target="_blank">Политика за поверителност</a>
-                      `,
-            },
-            preferencesModal: {
-              title: "Управление на предпочитанията за бисквитки",
-              acceptAllBtn: 'Приеми всички',
-              acceptNecessaryBtn: 'Отхвърляне на всички',
-              savePreferencesBtn: 'Приемане на текущия избор',
-              closeIconLabel: 'Затваряне на модален',
-              serviceCounterLabel: 'Услуга|Услуги',
-              sections: [
-                {
-                    title: "Вашият избор за поверителност",
-                    description: `В този панел можете да изразите някои предпочитания, свързани с обработката на вашата лична информация. Можете да прегледате и промените настройките по всяко време, като отново изведете този панел чрез предоставената връзка. За да откажете съгласието си за конкретните дейности по обработка, описани по-долу, изключете превключвателите или използвайте бутона „Отхвърляне на всички“ и потвърдете, че искате да запазите избора си.`,
-                  },
-                  {
-                    title: "Строго необходимо",
-                    description:"Тези бисквитки са от съществено значение за правилното функциониране на уебсайта и не могат да бъдат деактивирани.",
-    
-                    //това поле ще генерира превключвател, свързан с категорията „необходимо“.
-                    linkedCategory: 'necessary',
-                  },
-                {
-                  title: 'Ефективност и анализ',
-                  description:
-                    'Тези бисквитки събират информация за това как използвате нашия уебсайт. Всички данни са анонимизирани и не могат да бъдат използвани за идентифициране на Вашата самоличност.',
-                  linkedCategory: 'analytics',
-                  cookieTable: {
-                    caption: 'Cookie table',
-                    headers: {
-                      name: 'Cookie',
-                      domain: 'Domain',
-                      desc: 'Description',
-                    },
-                    body: [
-                      {
-                        name: '_ga',
-                        domain: location.hostname,
-                        desc: 'Description 1',
-                      },
-                      {
-                        name: '_gid',
-                        domain: location.hostname,
-                        desc: 'Description 2',
-                      },
-                    ],
-                  },
-                },
-                {
-                  title: 'Насочване и реклама',
-                  description:
-                    'Тези бисквитки се използват, за да направят рекламните съобщения по-подходящи за вас и вашите интереси. Намерението е да се показват реклами, които са подходящи и ангажиращи за отделния потребител и по този начин по-ценни за издателите и рекламодателите трети страни.',
-                  linkedCategory: 'ads',
-                },
-                {
-                  title: 'Повече информация',
-                  description:
-                    'За всякакви въпроси във връзка с моята политика относно бисквитките и вашия избор, моля, <a href="https://lacrema.bg/kontakti/">свържете се с нас</a>',
-                },
-              ],
-            },
-          },
       },
     },
   };

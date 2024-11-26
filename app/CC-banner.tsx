@@ -3,24 +3,45 @@
 import { useEffect, useState } from 'react';
 import * as CookieConsent from 'vanilla-cookieconsent';
 import 'vanilla-cookieconsent/dist/cookieconsent.css';
+
 import getConfig from '@/app/CC-config';
+import Script from 'next/script';
+import { GoogleAnalytics } from '@next/third-parties/google';
+
+export type ServicesKeys = 'mvvCustomJsScript' | 'ga' | 'youtube';
+
+const appendScripts = (serviceName: ServicesKeys, index: number) => {
+  switch(serviceName) {
+    case 'mvvCustomJsScript':
+      return <Script
+      key={index}
+      data-category="analytics"
+      data-service={serviceName}
+      src={`/scripts/${serviceName}.js`}
+    />
+    case "ga": 
+      return <GoogleAnalytics gaId='YOUR-GA-ID' key={index}/>
+    case "youtube":
+      return <Script
+      key={index}
+      data-category="analytics"
+      data-service={serviceName}
+      src={`/scripts/${serviceName}.js`}
+      />
+  }
+}
 
 const CookieConsentComponent = () => {
-    const [currScripts, setCurrScripts] = useState<string[]>([]);
-
-    const handleScripts = (scripts: string[]) => {
-        setCurrScripts(scripts);
-    };
+  const [newSr, setNewSr] = useState<string[]>([]);
 
     useEffect(() => {
-        CookieConsent.run(getConfig(handleScripts));
+        CookieConsent.run(getConfig(setNewSr));
     }, []);
 
     const ResetCookieConsent = () => {
         CookieConsent.reset(true);
-        CookieConsent.run(getConfig(handleScripts));
-      };
-
+        CookieConsent.run(getConfig(setNewSr));
+    };
    return (
     <div className='flex gap-10'>
       <button type="button" onClick={CookieConsent.showPreferences}>
@@ -30,12 +51,9 @@ const CookieConsentComponent = () => {
         Дев Ресет Бискии
       </button>
       {
-        currScripts.map((script) => (
-            <div key={script}>
-                {script}
-                {/* append each script here bruh may be use other methods then a map */}
-            </div>
-        ))
+        newSr.map((service, index) => {
+          return appendScripts(service as ServicesKeys, index);
+        })
       }
     </div>
   );
